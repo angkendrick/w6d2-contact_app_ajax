@@ -26,7 +26,7 @@
     </form>
     </div>
 
-<div class="col-xs-4 col-sm-6">
+<div class="col-xs-4 col-sm-6" id="resultsHolder">
     <span>Results</span>
     <table class="table table-striped" id="results">
     </table>
@@ -37,7 +37,6 @@
   $(document).ready(function(){
       $("input[type=text]").addClass("form-control");
       $("input[type=submit]").addClass("btn").addClass("btn-warning");
-
 
       console.log('ready');
 
@@ -76,8 +75,12 @@
 
   });
 
-  //GET ALL DATA
   $("#getAll").click(function(){
+      getAll()
+  });
+
+  //GET ALL DATA
+  function getAll(){
 
       $.ajax({
           type        : 'GET',
@@ -89,13 +92,37 @@
           console.log(data);
           $("#results").empty();
           $.each(data, function(i, obj){
-              $("#results").append("<tr><td>" + obj.first_name+ "</td><td>" + obj.last_name + "</td><td>"
+              $("#results").append("<tr id=" + obj.id + "><td style='display:none'>" + obj.id + "</td><td>" + obj.first_name+ "</td><td>" + obj.last_name + "</td><td>"
                       + obj.home_number + "</td><td>" + obj.mobile_number
                       + "</td><td>" + obj.email + "</td></tr>");
           });
       });
 
-  });
+
+//      //clickable row
+//      function addRowHandlers() {
+//          var table = document.getElementById("results");
+//          var rows = table.getElementsByTagName("tr");
+//          for (var i = 0; i < rows.length; i++) {
+//              var currentRow = table.rows[i];
+//              var createClickHandler =
+//                      function(row)
+//                      {
+//                          return function() {
+//                              var cell = row.getElementsByTagName("td")[0];
+//                              var id = cell.innerHTML;
+//                              alert("id:" + id);
+//                          };
+//                      };
+//
+//              currentRow.onclick = createClickHandler(currentRow);
+//          }
+//      }
+//
+//      addRowHandlers();
+
+
+  }
 
   //SUBMIT DATA
   $("#contact").submit(function(event){
@@ -121,10 +148,21 @@
       .done(function(data) {
           console.log(data);
           $("#status").text("saved!");
+          $("#contact_first_name").val('');
+          $("#contact_last_name").val('');
+          $("#contact_home_number").val('');
+          $("#contact_mobile_number").val('');
+          $("#contact_email").val('');
+          getAll();
+
       });
+
 
   });
 
+  $('#resultsHolder').on("click", '#results tr', function(){
+      alert($(this).attr("id"));
+  });
 
 
 
