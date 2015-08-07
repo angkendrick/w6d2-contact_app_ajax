@@ -1,7 +1,8 @@
 <div class="col-xs-8 col-sm-6">
     <%= form_for @contact, html: {id: :contact } do |f| %>
-        <table id="#contact_form">
-          <tr><td>Status</td><td id="status"></td></tr>
+        <table id="contact_form">
+          <tr><td>Contact</td><td></td></tr>
+          <tr style='display:none'><td><%= f.label 'id' %></td><td><%= f.text_field 'id' %></td></tr>
           <tr><td><%= f.label 'first_name' %></td><td><%= f.text_field 'first_name' %></td></tr>
           <tr><td><%= f.label 'last_name' %></td><td><%= f.text_field 'last_name' %></td></tr>
           <tr><td><%= f.label 'home_number' %></td><td><%= f.text_field 'home_number' %></td></tr>
@@ -15,6 +16,10 @@
 
     <button id="clear" class="btn btn-danger">New</button>
     <button id="getAll" class="btn btn-danger">Show All</button>
+
+    <br><br>
+
+    <button id="delete" class="btn btn-danger" disabled>Delete</button>
 
     <br><br>
 
@@ -34,6 +39,9 @@
 
 
 <script>
+
+  var readyToSubmit = true;
+
   $(document).ready(function(){
       $("input[type=text]").addClass("form-control");
       $("input[type=submit]").addClass("btn").addClass("btn-warning");
@@ -45,34 +53,33 @@
   //CLEAR
   $("#clear").click(function(){
       $("#contact")[0].reset();
-      $("#status").empty();
+      $("#delete").prop('disabled', true);
   });
 
   $("#search").submit(function(){
       event.preventDefault();
 
-      var formData = {
-          'search' : $("#search_content").val()
-      };
+          var formData = {
+              'search' : $("#search_content").val()
+          };
 
-      $.ajax({
-          type      : 'POST',
-          url       : '/contacts/search',
-          data      : formData,
-          dataType  : 'json'
-      })
+          $.ajax({
+              type      : 'POST',
+              url       : '/contacts/search',
+              data      : formData,
+              dataType  : 'json'
+          })
 
-      .done(function(data) {
-          console.log(data);
-          $("#results").empty();
-          $.each(data, function(i, obj){
-              $("#results").append("<tr><td>" + obj.first_name+ "</td><td>" + obj.last_name + "</td><td>"
-                      + obj.home_number + "</td><td>" + obj.mobile_number
-                      + "</td><td>" + obj.email + "</td></tr>");
+          .done(function(data) {
+              console.log(data);
+              $("#results").empty();
+              $.each(data, function(i, obj){
+                  $("#results").append("<tr id=" + obj.id + "><td class='id' style='display:none'>" + obj.id + "</td><td class='first_name'>" + obj.first_name+ "</td><td class='last_name'>" + obj.last_name + "</td><td class='home_number'>"
+                          + obj.home_number + "</td><td class='mobile_number'>" + obj.mobile_number
+                          + "</td><td class='email'>" + obj.email + "</td></tr>");
+              });
+
           });
-
-      });
-
   });
 
   $("#getAll").click(function(){
@@ -92,37 +99,42 @@
           console.log(data);
           $("#results").empty();
           $.each(data, function(i, obj){
-              $("#results").append("<tr id=" + obj.id + "><td style='display:none'>" + obj.id + "</td><td>" + obj.first_name+ "</td><td>" + obj.last_name + "</td><td>"
-                      + obj.home_number + "</td><td>" + obj.mobile_number
-                      + "</td><td>" + obj.email + "</td></tr>");
+              $("#results").append("<tr id=" + obj.id + "><td class='id' style='display:none'>" + obj.id + "</td><td class='first_name'>" + obj.first_name+ "</td><td class='last_name'>" + obj.last_name + "</td><td class='home_number'>"
+                      + obj.home_number + "</td><td class='mobile_number'>" + obj.mobile_number
+                      + "</td><td class='email'>" + obj.email + "</td></tr>");
           });
       });
 
-
-//      //clickable row
-//      function addRowHandlers() {
-//          var table = document.getElementById("results");
-//          var rows = table.getElementsByTagName("tr");
-//          for (var i = 0; i < rows.length; i++) {
-//              var currentRow = table.rows[i];
-//              var createClickHandler =
-//                      function(row)
-//                      {
-//                          return function() {
-//                              var cell = row.getElementsByTagName("td")[0];
-//                              var id = cell.innerHTML;
-//                              alert("id:" + id);
-//                          };
-//                      };
-//
-//              currentRow.onclick = createClickHandler(currentRow);
-//          }
-//      }
-//
-//      addRowHandlers();
-
-
   }
+
+  $("#delete").on("click", function(){
+      if(confirm('Are you sure?')){
+          deleteContact();
+      } else {
+          console.log('delete canceled!');
+      }
+  });
+
+  function deleteContact(){
+      var id = $("#contact_id").val();
+
+      $.ajax({
+          type        : 'DELETE',
+          url         : '/contacts/' + id,
+          dataType    : 'json'
+      })
+
+      .fail(function(data){
+          console.log(data);
+      })
+      .done(function(data){
+          console.log('looking good!');
+          console.log(data);
+          getAll();
+          $("#contact")[0].reset();
+      });
+  }
+
 
   //SUBMIT DATA
   $("#contact").submit(function(event){
@@ -130,38 +142,53 @@
 
       //var formData = $("#contact").serialize();
 
-      var formData = {
-          'first_name'     : $("#contact_first_name").val(),
-          'last_name'      : $("#contact_last_name").val(),
-          'home_number'    : $("#contact_home_number").val(),
-          'mobile_number'  : $("#contact_mobile_number").val(),
-          'email'          : $("#contact_email").val()
-      };
+      if (readyToSubmit) {
+          var formData = {
+              'first_name'     : $("#contact_first_name").val(),
+              'last_name'      : $("#contact_last_name").val(),
+              'home_number'    : $("#contact_home_number").val(),
+              'mobile_number'  : $("#contact_mobile_number").val(),
+              'email'          : $("#contact_email").val()
+          };
 
-      $.ajax({
-          type        : 'POST',
-          url         : '/contacts',
-          data        : formData,
-          dataType    : 'json'
-      })
+          $.ajax({
+              type        : 'POST',
+              url         : '/contacts',
+              data        : formData,
+              dataType    : 'json'
+          })
 
-      .done(function(data) {
-          console.log(data);
-          $("#status").text("saved!");
-          $("#contact_first_name").val('');
-          $("#contact_last_name").val('');
-          $("#contact_home_number").val('');
-          $("#contact_mobile_number").val('');
-          $("#contact_email").val('');
-          getAll();
+          .done(function(data) {
+              console.log(data);
+              $("#contact_first_name").val('');
+              $("#contact_last_name").val('');
+              $("#contact_home_number").val('');
+              $("#contact_mobile_number").val('');
+              $("#contact_email").val('');
+              getAll();
 
-      });
-
+          });
+      } else {
+          alert('click new to submit a new contact');
+      }
 
   });
 
+  //click handler for results table
   $('#resultsHolder').on("click", '#results tr', function(){
-      alert($(this).attr("id"));
+      //alert($(this).attr("id"));
+
+      $("#status").text("saved!");
+      $("#contact_id").val($(this).children('.id').text());
+      $("#contact_first_name").val($(this).children('.first_name').text());
+      $("#contact_last_name").val($(this).children('.last_name').text());
+      $("#contact_home_number").val($(this).children('.home_number').text());
+      $("#contact_mobile_number").val($(this).children('.mobile_number').text());
+      $("#contact_email").val($(this).children('.email').text());
+
+      $("#delete").prop('disabled', false);
+      readyToSubmit = false;
+
   });
 
 

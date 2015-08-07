@@ -31,8 +31,11 @@ class ContactsController < ApplicationController
 
   end
 
-  def show
-
+  def destroy
+    @contact = Contact.find(params[:id])
+    if @contact.destroy
+      render json: @contact
+    end
   end
 
   def update
